@@ -9,6 +9,8 @@
         "prepackage": "npm run build:react",
         "premake": "npm run build:react",
         "build:react": "node -e \"require('fs').mkdirSync('src/dist',{recursive:true});require('esbuild').buildSync({entryPoints:['src/components/reactApp.jsx'],bundle:true,outfile:'src/dist/react-ui.js',platform:'browser',loader:{'.jsx':'jsx'},minify:true});\"",
+        "dev:react": "node ./scripts/esbuild-dev.js",
+        "dev:electron": "node ./scripts/run-electron-dev.js",
         "start": "electron-forge start",
         "package": "electron-forge package",
         "make": "electron-forge make",

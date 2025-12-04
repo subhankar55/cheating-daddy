@@ -128,3 +128,18 @@ When implementing transcription features borrow the following rules from
 There are placeholder files for future LLM integration (e.g. Qwen models via
 `llama.cpp`). Continue development after the core transcription pipeline is
 stable and ensure tests cover this new functionality.
+
+## Development helpers (local)
+
+- **dev:react**: Run `node ./scripts/esbuild-dev.js` to start an `esbuild` watch that outputs `src/dist/react-ui.js`. This is useful while editing `src/components/reactApp.jsx`.
+- **dev:electron**: Run `node ./scripts/run-electron-dev.js` to spawn the local Electron binary directly (this avoids Windows `&` path quoting issues when invoking `electron` via npm scripts).
+
+Examples:
+
+```powershell
+npm run dev:react
+# in another terminal (PowerShell)
+npm run dev:electron
+```
+
+If packaging (`npm run make`) fails on Windows due to the repository path containing special characters (for example `&`), move the repository to a path without special chars or run the packaging commands from a path that does not include `&` in the PATH entries.
