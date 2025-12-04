@@ -18,7 +18,7 @@ Install dependencies and run the development app:
 
 Run `npx prettier --write .` before committing. Prettier uses the settings in
 `.prettierrc` (four-space indentation, print width 150, semicolons and single
-quotes). `src/assets` and `node_modules` are ignored via `.prettierignore`.
+quotes). `src/assets` and `node_modules` are ignored via `.prettierrcignore`.
 The project does not provide linting; `npm run lint` simply prints
 "No linting configured".
 
