@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
     <head>
-        <meta http-equiv="content-security-policy" content="script-src 'self' 'unsafe-inline'" />
+        <!-- Allow https: for dev (CDN) so UMD React can load when using Live Server -->
+        <meta http-equiv="content-security-policy" content="script-src 'self' 'unsafe-inline' https:;" />
         <title>Screen and Audio Capture</title>
         <style>
             :root {
@@ -103,10 +104,107 @@
         <script src="assets/marked-4.3.0.min.js"></script>
         <script src="assets/highlight-11.9.0.min.js"></script>
         <link rel="stylesheet" href="assets/highlight-vscode-dark.min.css" />
-        <script type="module" src="components/app/CheatingDaddyApp.js"></script>
 
-        <cheating-daddy-app id="cheddar"></cheating-daddy-app>
-        <script src="script.js"></script>
+        <!-- Mount point for React app. The bundled UI is created by esbuild into `src/dist/react-ui.js`. -->
+        <div id="cheddar-root">
+            <!-- Fallback static UI for Live Server / missing bundle so something always appears -->
+            <div style="padding:16px;color:var(--text-color);">
+                <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div>
+                        <strong>Cheating Daddy (Fallback UI)</strong>
+                        <div style="font-size:12px;color:var(--description-color);">Development fallback interface</div>
+                    </div>
+                    <div>
+                        <span id="fallback-status" style="margin-right:12px;font-size:13px;">Status: Idle</span>
+                        <button id="fallback-start" style="padding:6px 10px;margin-right:6px;">Start</button>
+                        <button id="fallback-stop" style="padding:6px 10px;">Stop</button>
+                    </div>
+                </header>
+                <main style="display:grid;grid-template-columns:1fr 320px;gap:12px;">
+                    <section style="background:var(--main-content-background);padding:12px;border-radius:var(--content-border-radius);">
+                        <h3>Capture Controls</h3>
+                        <p style="color:var(--description-color);">Fallback controls when React bundle isn't available.</p>
+                        <div>
+                            <label style="margin-right:8px;">Interval (s):</label>
+                            <input id="fallback-interval" type="number" value="5" min="1" style="width:80px;" />
+                        </div>
+                        <div style="margin-top:8px;">
+                            <button id="fallback-manual" style="padding:6px 10px;">Manual Screenshot</button>
+                        </div>
+                    </section>
+                    <aside style="background:rgba(0,0,0,0.6);padding:12px;border-radius:var(--content-border-radius);">
+                        <h4>Response Preview</h4>
+                        <div id="fallback-response" style="white-space:pre-wrap;color:var(--description-color);max-height:300px;overflow:auto;">No response yet</div>
+                    </aside>
+                </main>
+            </div>
+        </div>
+
+        <!-- Bundled React UI (built with esbuild) -->
+        <script src="dist/react-ui.js"></script>
+
+        <!-- Inline fallback wiring: connect buttons to available renderer APIs when bundle is missing -->
+        <script>
+            (function(){
+                const startBtn = document.getElementById('fallback-start');
+                const stopBtn = document.getElementById('fallback-stop');
+                const manualBtn = document.getElementById('fallback-manual');
+                const statusEl = document.getElementById('fallback-status');
+                const responseEl = document.getElementById('fallback-response');
+
+                function setStatus(s){
+                    if(statusEl) statusEl.textContent = 'Status: ' + s;
+                }
+
+                startBtn && startBtn.addEventListener('click', ()=>{
+                    setStatus('Starting...');
+                    if(window.cheddar && typeof window.cheddar.startCapture === 'function'){
+                        window.cheddar.startCapture();
+                        setStatus('Live');
+                    } else {
+                        setStatus('Start API not available');
+                    }
+                });
+
+                stopBtn && stopBtn.addEventListener('click', ()=>{
+                    setStatus('Stopping...');
+                    if(window.cheddar && typeof window.cheddar.stopCapture === 'function'){
+                        window.cheddar.stopCapture();
+                        setStatus('Idle');
+                    } else {
+                        setStatus('Stop API not available');
+                    }
+                });
+
+                manualBtn && manualBtn.addEventListener('click', async ()=>{
+                    setStatus('Manual screenshot...');
+                    try{
+                        if(typeof window.captureManualScreenshot === 'function'){
+                            await window.captureManualScreenshot();
+                            setStatus('Manual screenshot sent');
+                        } else {
+                            setStatus('Manual API not available');
+                        }
+                    }catch(e){
+                        setStatus('Error');
+                        console.error(e);
+                    }
+                });
+
+                // If the React bridge appears, let it update the fallback response/status
+                const bridgeCheck = setInterval(()=>{
+                    if(window._reactAppApi){
+                        // Let the React UI take over; stop updating fallback
+                        clearInterval(bridgeCheck);
+                        // Mirror status from bridge if possible
+                        if(window._reactAppApi.setStatus) window._reactAppApi.setStatus = (s)=>{ setStatus(s); };
+                        if(window._reactAppApi.setResponse) window._reactAppApi.setResponse = (r)=>{ if(responseEl) responseEl.textContent = r; };
+                    }
+                },200);
+            })();
+        </script>
+
+        <!-- Existing renderer helpers (keeps capture, audio and IPC logic) -->
         <script src="utils/renderer.js"></script>
     </body>
 </html>

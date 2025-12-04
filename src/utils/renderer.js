@@ -745,22 +745,38 @@ function handleShortcut(shortcutKey) {
     }
 }
 
-// Create reference to the main app element
-const cheatingDaddyApp = document.querySelector('cheating-daddy-app');
+// Bridge to UI layer (React) — use window._reactAppApi when available
+function getUiApi() {
+    return window._reactAppApi || {
+        handleStart: () => console.warn('UI start handler not available yet'),
+        handleStop: () => console.warn('UI stop handler not available yet'),
+        setStatus: s => console.log('Status:', s),
+        setResponse: r => console.log('Response:', r),
+        getCurrentView: () => 'main',
+        getLayoutMode: () => localStorage.getItem('layout') || 'normal',
+    };
+}
 
-// Consolidated cheddar object - all functions in one place
 const cheddar = {
     // Element access
-    element: () => cheatingDaddyApp,
-    e: () => cheatingDaddyApp,
+    element: () => getUiApi(),
+    e: () => getUiApi(),
 
-    // App state functions - access properties directly from the app element
-    getCurrentView: () => cheatingDaddyApp.currentView,
-    getLayoutMode: () => cheatingDaddyApp.layoutMode,
+    // App state functions
+    getCurrentView: () => getUiApi().getCurrentView(),
+    getLayoutMode: () => getUiApi().getLayoutMode(),
 
     // Status and response functions
-    setStatus: text => cheatingDaddyApp.setStatus(text),
-    setResponse: response => cheatingDaddyApp.setResponse(response),
+    setStatus: text => {
+        const api = getUiApi();
+        if (api && typeof api.setStatus === 'function') api.setStatus(text);
+        else console.log('Status:', text);
+    },
+    setResponse: response => {
+        const api = getUiApi();
+        if (api && typeof api.setResponse === 'function') api.setResponse(response);
+        else console.log('Response:', response);
+    },
 
     // Core functionality
     initializeGemini,

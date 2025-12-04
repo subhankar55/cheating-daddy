@@ -5,6 +5,10 @@
     "description": "cheating daddy",
     "main": "src/index.js",
     "scripts": {
+        "prestart": "npm run build:react",
+        "prepackage": "npm run build:react",
+        "premake": "npm run build:react",
+        "build:react": "node -e \"require('fs').mkdirSync('src/dist',{recursive:true});require('esbuild').buildSync({entryPoints:['src/components/reactApp.jsx'],bundle:true,outfile:'src/dist/react-ui.js',platform:'browser',loader:{'.jsx':'jsx'},minify:true});\"",
         "start": "electron-forge start",
         "package": "electron-forge package",
         "make": "electron-forge make",
@@ -26,7 +30,9 @@
     "license": "GPL-3.0",
     "dependencies": {
         "@google/genai": "^1.2.0",
-        "electron-squirrel-startup": "^1.0.1"
+        "electron-squirrel-startup": "^1.0.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     },
     "devDependencies": {
         "@electron-forge/cli": "^7.8.1",
@@ -42,5 +48,7 @@
         "vitest": "^1.6.1",
         "jsdom": "^23.2.0",
         "electron": "^30.0.5"
+        ,
+        "esbuild": "^0.18.20"
     }
 }
